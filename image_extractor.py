@@ -2,7 +2,7 @@ import os
 import shutil
 
 # Set your source folder (where images actually are)
-SOURCE_FOLDER = "archive/Images/Images"
+SOURCE_FOLDER = "/Users/Herschelle/Documents/Data-Science-Project/archive (3)"
 
 # Output folder for dashboard
 OUTPUT_FOLDER = "dataset"

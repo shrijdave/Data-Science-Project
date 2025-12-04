@@ -69,6 +69,15 @@
         background: #1c4fb0;
     }
 
+    button:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+    }
+
+    .hidden {
+        display: none;
+    }
+
     img.preview {
         width: 100%;
         border-radius: 8px;
@@ -118,13 +127,15 @@
     <option value="ae">Autoencoder</option>
 </select>
 
-<p>PCA Components</p>
+<p id="pcaLabel">PCA Components</p>
 <input type="range" id="pcaSlider" min="4" max="256" value="64" disabled>
 <span id="pcaValue">64</span>
 
-<p>Autoencoder Bottleneck</p>
-<input type="range" id="aeSlider" min="4" max="256" value="64" disabled></p>
-            <button id="generateBtn">Generate new images</button>
+<p id="aeLabel" class="hidden">Generation Temperature</p>
+<input type="range" id="aeSlider" min="0.1" max="2.0" step="0.1" value="1.0" class="hidden">
+<span id="aeValue" class="hidden">1.0</span>
+
+            <button id="generateBtn" class="hidden">Generate new images</button>
         </div>
 
         <!-- ORIGINAL IMAGE -->
@@ -194,15 +205,33 @@ initDataset();
 
 // Mode switching
 const modeSelect = document.getElementById("modeSelect");
+const pcaSlider = document.getElementById("pcaSlider");
+const pcaLabel = document.getElementById("pcaLabel");
+const pcaValue = document.getElementById("pcaValue");
 const aeSlider = document.getElementById("aeSlider");
+const aeLabel = document.getElementById("aeLabel");
+const aeValue = document.getElementById("aeValue");
+const generateBtn = document.getElementById("generateBtn");
 
 modeSelect.addEventListener("change", () => {
     if (modeSelect.value === "pca") {
         pcaSlider.disabled = false;
-        aeSlider.disabled = true;
+        pcaSlider.classList.remove("hidden");
+        pcaLabel.classList.remove("hidden");
+        pcaValue.classList.remove("hidden");
+        aeSlider.classList.add("hidden");
+        aeLabel.classList.add("hidden");
+        aeValue.classList.add("hidden");
+        generateBtn.classList.add("hidden");
     } else {
         pcaSlider.disabled = true;
-        aeSlider.disabled = false;
+        pcaSlider.classList.add("hidden");
+        pcaLabel.classList.add("hidden");
+        pcaValue.classList.add("hidden");
+        aeSlider.classList.remove("hidden");
+        aeLabel.classList.remove("hidden");
+        aeValue.classList.remove("hidden");
+        generateBtn.classList.remove("hidden");
     }
 });
 
@@ -212,6 +241,11 @@ modeSelect.dispatchEvent(new Event('change'));
 // Update PCA value label
 pcaSlider.oninput = () => {
     document.getElementById("pcaValue").textContent = pcaSlider.value;
+};
+
+// Update temperature value label
+aeSlider.oninput = () => {
+    document.getElementById("aeValue").textContent = parseFloat(aeSlider.value).toFixed(1);
 };
 
 // When user selects a new image
@@ -257,37 +291,47 @@ pcaSlider.addEventListener("input", async () => {
     reconErrorText.textContent = result.error.toFixed(3);
 });
 
-aeSlider.addEventListener("input", async () => {
-    if (modeSelect.value !== "ae") return; // Only run if AE mode is active
+// Autoencoder reconstruction on image selection
+selector.addEventListener("change", async () => {
+    if (modeSelect.value === "ae") {
+        const imgPath = selector.value;
+        const base64 = "data:image/png;base64," + await getBase64Image(imgPath);
 
-    const bottleneck = aeSlider.value;
-    const imgPath = selector.value;
+        const response = await fetch("http://127.0.0.1:5000/ae", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                image: base64,
+                bottleneck: 128
+            })
+        });
 
-    // Convert selected image → base64
-    const base64 = "data:image/png;base64," + await getBase64Image(imgPath);
-
-
-    // Send to backend /ae
-    const response = await fetch("http://127.0.0.1:5000/ae", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            image: base64,
-            bottleneck: bottleneck
-        })
-    });
-
-    const result = await response.json();
-
-    // Update UI
-    reconImg.src = result.image;
-    reconErrorText.textContent = result.error.toFixed(6);
+        const result = await response.json();
+        reconImg.src = result.image;
+        reconErrorText.textContent = result.error.toFixed(6);
+    }
 });
 
-// Generate button (placeholder)
-document.getElementById("generateBtn").addEventListener("click", () => {
-    reconImg.src = "https://via.placeholder.com/300x300.png?text=Generated+Face";
-    reconErrorText.textContent = (Math.random() * 0.03).toFixed(3);
+// Generate button
+document.getElementById("generateBtn").addEventListener("click", async () => {
+    const temperature = parseFloat(aeSlider.value);
+    
+    try {
+        const response = await fetch("http://127.0.0.1:5000/generate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                temperature: temperature
+            })
+        });
+        
+        const result = await response.json();
+        reconImg.src = result.image;
+        reconErrorText.textContent = "Generated (temp: " + temperature.toFixed(1) + ")";
+    } catch (error) {
+        console.error("Generation failed:", error);
+        alert("Failed to generate image. Make sure the backend is running.");
+    }
 });
 </script>
 

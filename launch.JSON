@@ -15,7 +15,7 @@
             "type": "chrome",
             "request": "launch",
             "name": "dashboard.html",
-            "file": "/Users/shrij/Documents/data science/Final Project/dashboard.html"
+            "file": "/Users/Herschelle/Documents/Data-Science-Project/dashboard.html"
         }
     ]
 }

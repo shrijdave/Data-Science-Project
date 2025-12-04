@@ -131,7 +131,8 @@ def decode_image(base64_str):
     return TF.ToTensor()(img).unsqueeze(0)
 
 def encode_image(tensor_img):
-    arr = tensor_img.squeeze().permute(1,2,0).detach().numpy() * 255
+    arr = tensor_img.squeeze().permute(1,2,0).detach().cpu().numpy()
+    arr = np.clip(arr, 0, 1) * 255  # Ensure values are in [0,1] before scaling
     arr = arr.astype(np.uint8)
     img = Image.fromarray(arr)
     buf = io.BytesIO()
@@ -163,6 +164,31 @@ def run_autoencoder():
     })
 
 
+# -------------------------------
+# GENERATE IMAGE ENDPOINT
+# -------------------------------
+@app.route("/generate", methods=["POST"])
+def generate_image():
+    global ae_model
+    
+    data = request.json
+    temperature = float(data.get("temperature", 1.0))
+    
+    # Sample random latent vector with temperature/variance control
+    # Higher temperature = more variance = more creative/diverse results
+    z = torch.randn(1, 128).to(device) * temperature
+    
+    # Generate image from latent vector using the trained decoder
+    with torch.no_grad():
+        generated = ae_model.decoder(z)
+        generated = generated.view(-1, 3, 128, 128)
+    
+    # Encode to base64
+    result_img = encode_image(generated)
+    
+    return jsonify({
+        "image": result_img
+    })
 
 
 # -------------------------
