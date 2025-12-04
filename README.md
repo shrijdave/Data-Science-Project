@@ -1,5 +1,7 @@
 In launch.JSON file change "file": to correct dashboard.html location
 
+Have folder with everything in it like this:
+
 
 <img width="288" height="221" alt="image" src="https://github.com/user-attachments/assets/5b9477da-e9ba-47a8-b97c-11f1972fe79f" />
 
