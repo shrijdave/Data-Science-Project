@@ -1,3 +1,6 @@
+Dataset: https://www.kaggle.com/datasets/soumendraprasad/fifa-2022-all-players-image-dataset/data
+
+
 In launch.JSON file change "file": to correct dashboard.html location
 
 Replace the "python3" with "python" to run properly if you need to. Run in the terminal in order
