@@ -1,22 +1,16 @@
 In launch.JSON file change "file": to correct dashboard.html location
 
-Have folder with everything in it like this:
+Replace the "python3" with "python" to run properly if you need to. Run in the terminal in order
 
+1) python3 image_extractor.py  (extracts all 25k images to be under 1 folder)
 
-<img width="288" height="221" alt="image" src="https://github.com/user-attachments/assets/5b9477da-e9ba-47a8-b97c-11f1972fe79f" />
+2) python3 train_autoencoder.py  (it may take a minute to train) This will create a ae_model.pth (trained file)
 
-
-
-
-Replace python3 with python if you need to. Run in the terminal in order
-
-1) python3 train_autoencoder.py  (it may take a minute to train) This will create a ae_model.pth (trained file)
-
-2) python3 backend_pca.py 
+3) python3 backend_pca.py 
 
 In a new terminal:
 
-3) python3 -m http.server 8080
+4) python3 -m http.server 8080
 
 Open Website:
 
