@@ -1,5 +1,6 @@
 Dataset: https://www.kaggle.com/datasets/soumendraprasad/fifa-2022-all-players-image-dataset/data
 
+If not already installed: pip install flask pillow numpy scikit-learn tqdm,  pip install flask-cors  , pip install torch torchvision torchaudio
 
 In launch.JSON file change "file": to correct dashboard.html location
 
