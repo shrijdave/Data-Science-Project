@@ -5,7 +5,7 @@ If not already installed: pip install flask pillow numpy scikit-learn tqdm,  pip
 
 Replace the "python3" with "python" to run properly if you need to. Run in the terminal in order
 
-1) python3 image_extractor.py  (extracts all 25k images to be under 1 folder)
+1) python3 image_extractor.py  (extracts all 41k images to be under 1 folder)
 
 2) python3 train_autoencoder.py  (it may take a minute to train) This will create a ae_model.pth (trained file)
 
