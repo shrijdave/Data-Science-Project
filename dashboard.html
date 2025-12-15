@@ -124,7 +124,7 @@
 
 <p>Autoencoder Bottleneck</p>
 <input type="range" id="aeSlider" min="4" max="128" value="64" disabled></p>
-            <button id="generateBtn">Generate new images</button>
+            
         </div>
 
         <!-- ORIGINAL IMAGE -->
@@ -284,12 +284,11 @@ aeSlider.addEventListener("input", async () => {
     reconErrorText.textContent = result.error.toFixed(6);
 });
 
-// Generate button (placeholder)
-document.getElementById("generateBtn").addEventListener("click", () => {
-    reconImg.src = "https://via.placeholder.com/300x300.png?text=Generated+Face";
-    reconErrorText.textContent = (Math.random() * 0.03).toFixed(3);
-});
+
 </script>
+
+</body>
+</html>
 
 </body>
 </html>
