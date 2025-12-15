@@ -7,16 +7,15 @@ import torch.optim as optim
 from torchvision import transforms
 from tqdm import tqdm
 
-# -----------------------------
-# SETTINGS
-# -----------------------------
+
+
 DATASET_ROOT = "dataset"
 SAVE_PATH = "ae_model.pth"
 
-NUM_IMAGES = 3000        # 3k is enough
+NUM_IMAGES = 3000        
 EPOCHS = 50
 BATCH_SIZE = 32
-BOTTLENECK = 128         # MUST match backend
+BOTTLENECK = 128         
 
 # -----------------------------
 # DEVICE
@@ -24,17 +23,17 @@ BOTTLENECK = 128         # MUST match backend
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print("Using device:", device)
 
-# -----------------------------
+
 # IMAGE TRANSFORM
-# -----------------------------
+
 transform = transforms.Compose([
     transforms.Resize((128, 128)),
     transforms.ToTensor(),
 ])
 
-# -----------------------------
+
 # LOAD RANDOM IMAGES
-# -----------------------------
+
 def load_random_images():
     imgs = [f for f in os.listdir(DATASET_ROOT) if f.endswith(".jpg")]
     random.shuffle(imgs)
@@ -56,9 +55,8 @@ for p in tqdm(paths):
 dataset = torch.stack(images)
 loader = torch.utils.data.DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=True)
 
-# -----------------------------
 # CONVOLUTIONAL AUTOENCODER
-# -----------------------------
+
 class Autoencoder(nn.Module):
     def __init__(self, bottleneck=128):
         super().__init__()
@@ -92,9 +90,9 @@ class Autoencoder(nn.Module):
         z = self.encoder(x)
         return self.decoder(z), z
 
-# -----------------------------
+
 # TRAIN
-# -----------------------------
+
 model = Autoencoder(BOTTLENECK).to(device)
 optimizer = optim.Adam(model.parameters(), lr=5e-4)
 loss_fn = nn.MSELoss()
@@ -116,9 +114,8 @@ for epoch in range(EPOCHS):
 
     print(f"Epoch {epoch+1}/{EPOCHS}  Loss: {total/len(loader):.6f}")
 
-# -----------------------------
 # SAVE
-# -----------------------------
+
 torch.save(model.state_dict(), SAVE_PATH)
 print(f"Saved model to {SAVE_PATH}")
 
