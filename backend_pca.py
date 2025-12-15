@@ -9,18 +9,18 @@ import torch
 import torch.nn as nn
 import torchvision.transforms as TF
 
-# -------------------------
+
 # Flask setup
-# -------------------------
+
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
 
 IMG_SIZE = 256  # PCA resize
 AE_IMG_SIZE = 128
 
-# -------------------------
+
 # Image helpers
-# -------------------------
+
 def b64_to_pil(b64_data):
     return Image.open(
         io.BytesIO(base64.b64decode(b64_data))
@@ -38,9 +38,9 @@ def pil_to_b64(img):
     img.save(buf, format="PNG")
     return base64.b64encode(buf.getvalue()).decode()
 
-# -------------------------
+
 # PCA API
-# -------------------------
+
 @app.route("/pca", methods=["POST"])
 def run_pca():
     data = request.json
@@ -68,14 +68,14 @@ def run_pca():
         "components_used": min(K, IMG_SIZE)
     })
 
-# -------------------------
+
 # AUTOENCODER MODEL
-# -------------------------
+
 class Autoencoder(nn.Module):
     def __init__(self, bottleneck=128):
         super().__init__()
 
-        # Encoder (MUST match training)
+        # Encoder
         self.encoder = nn.Sequential(
             nn.Conv2d(3, 32, 4, stride=2, padding=1),   # 64x64
             nn.ReLU(),
@@ -106,18 +106,17 @@ class Autoencoder(nn.Module):
         return out, z
 
 
-# -------------------------
 # Load pretrained AE
-# -------------------------
+
 device = torch.device("cpu")
 
 ae_model = Autoencoder(bottleneck=128).to(device)
 ae_model.load_state_dict(torch.load("ae_model.pth", map_location=device))
 ae_model.eval()
 
-# -------------------------
+
 # AE image helpers
-# -------------------------
+
 def decode_image(base64_str):
     if "," in base64_str:
         base64_str = base64_str.split(",")[1]
@@ -136,9 +135,9 @@ def encode_image(tensor_img):
     img.save(buf, format="PNG")
     return "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode()
 
-# -------------------------
-# AUTOENCODER API (FIXED)
-# -------------------------
+
+# AUTOENCODER API
+
 @app.route("/ae", methods=["POST"])
 def run_autoencoder():
     data = request.json
@@ -150,7 +149,7 @@ def run_autoencoder():
     with torch.no_grad():
         _, z = ae_model(img)
 
-        # 🔥 LATENT MASKING (THIS MAKES SLIDER WORK)
+        
         z_masked = z.clone()
         z_masked[:, bottleneck:] = 0
 
@@ -164,9 +163,8 @@ def run_autoencoder():
         "error": round(mse, 6)
     })
 
-# -------------------------
 # Run server
-# -------------------------
+
 if __name__ == "__main__":
     print("Backend ready at http://127.0.0.1:5000")
     app.run(debug=True)
