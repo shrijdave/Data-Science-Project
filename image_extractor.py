@@ -2,10 +2,11 @@ import os
 import shutil
 
 # Set your source folder (where images actually are)
-SOURCE_FOLDER = "archive/Images/Images"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# Output folder for dashboard
-OUTPUT_FOLDER = "dataset"
+# points to: ...\DATA-SCIENCE-PROJECT-MAIN\Data-Science-Project-main\archive\Images\Images
+SOURCE_FOLDER = os.path.join(BASE_DIR, "archive", "Images", "Images")
+OUTPUT_FOLDER = os.path.join(BASE_DIR, "dataset")
 
 # Valid image extensions
 EXTS = (".jpg", ".jpeg", ".png", ".bmp", ".webp")
@@ -18,6 +19,9 @@ print("Scanning for images...")
 image_paths = []
 
 # Walk through ALL subfolders
+print("SOURCE_FOLDER exists:", os.path.exists(SOURCE_FOLDER))
+print("Absolute path:", os.path.abspath(SOURCE_FOLDER))
+
 for root, dirs, files in os.walk(SOURCE_FOLDER):
     for file in files:
         if file.lower().endswith(EXTS):
