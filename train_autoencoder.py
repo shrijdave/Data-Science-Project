@@ -12,7 +12,7 @@ from tqdm import tqdm
 DATASET_ROOT = "dataset"
 SAVE_PATH = "ae_model.pth"
 
-NUM_IMAGES = 3000        
+NUM_IMAGES = 10000        
 EPOCHS = 50
 BATCH_SIZE = 32
 BOTTLENECK = 128         
@@ -118,5 +118,3 @@ for epoch in range(EPOCHS):
 
 torch.save(model.state_dict(), SAVE_PATH)
 print(f"Saved model to {SAVE_PATH}")
-
-
