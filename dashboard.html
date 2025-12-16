@@ -101,21 +101,22 @@
 <body>
 
 <div class="container">
-    <h1>Image Compression & Generation</h1>
+<h1>Image Compression & Generation</h1>
 
-    <div class="grid">
+<div class="grid">
 
-        <!-- LEFT SIDE CONTROL PANEL -->
-        <div class="card">
-            <h2>Controls</h2>
+<!-- CONTROLS -->
+<div class="card">
+<h2>Controls</h2>
 
-            <p>Select Image</p>
-            <select id="imageSelector"></select>
+<p>Select Image</p>
+<select id="imageSelector"></select>
 
-            <p>Select Mode</p>
+<p>Select Mode</p>
 <select id="modeSelect">
     <option value="pca">PCA</option>
     <option value="ae">Autoencoder</option>
+    <option value="vae">VAE (Generate)</option>
 </select>
 
 <p>PCA Components</p>
@@ -123,35 +124,35 @@
 <span id="pcaValue">64</span>
 
 <p>Autoencoder Bottleneck</p>
-<input type="range" id="aeSlider" min="4" max="128" value="64" disabled></p>
-            
-        </div>
+<input type="range" id="aeSlider" min="4" max="128" value="64" disabled>
 
-        <!-- ORIGINAL IMAGE -->
-        <div class="card" style="text-align:center;">
-            <h2>Original Image</h2>
-            <img id="originalImg" class="preview" 
-                 src="https://via.placeholder.com/300x300.png?text=Loading+Dataset..." />
-        </div>
+<button id="vaeBtn" style="display:none;">Generate VAE Images</button>
+</div>
 
-        <!-- RECONSTRUCTED IMAGE -->
-        <div class="card" style="text-align:center;">
-            <h2>Reconstruction</h2>
-            <img id="reconImg" class="preview" 
-                 src="https://via.placeholder.com/300x300.png?text=Reconstruction" />
-        </div>
+<!-- ORIGINAL IMAGE -->
+<div class="card" style="text-align:center;">
+<h2>Original Image</h2>
+<img id="originalImg" class="preview"
+     src="https://via.placeholder.com/300x300.png?text=Loading+Dataset..." />
+</div>
 
-    </div>
+<!-- OUTPUT -->
+<div class="card" style="text-align:center;">
+<h2>Reconstruction</h2>
+<img id="reconImg" class="preview"
+     src="https://via.placeholder.com/300x300.png?text=Reconstruction" />
+</div>
 
-    <!-- METRICS SECTION -->
-    <div class="card" id="metricsBox">
-        <h2>Reconstruction error</h2>
-        <div id="reconErrorValue">0.000</div>
-    </div>
+</div>
+
+<!-- METRICS -->
+<div class="card" id="metricsBox">
+<h2>Reconstruction error</h2>
+<div id="reconErrorValue">0.000</div>
+</div>
 </div>
 
 <script>
-// Load dataset images (1.jpg,2.jpg,...)
 const datasetFolder = "dataset/";
 const datasetImages = [];
 for (let i = 1; i <= 300; i++) datasetImages.push(`${i}.jpg`);
@@ -195,100 +196,98 @@ initDataset();
 // Mode switching
 const modeSelect = document.getElementById("modeSelect");
 const aeSlider = document.getElementById("aeSlider");
+const pcaSlider = document.getElementById("pcaSlider");
+const vaeBtn = document.getElementById("vaeBtn");
 
 modeSelect.addEventListener("change", () => {
     if (modeSelect.value === "pca") {
         pcaSlider.disabled = false;
         aeSlider.disabled = true;
-    } else {
+        vaeBtn.style.display = "none";
+    } else if (modeSelect.value === "ae") {
         pcaSlider.disabled = true;
         aeSlider.disabled = false;
+        vaeBtn.style.display = "none";
+    } else {
+        pcaSlider.disabled = true;
+        aeSlider.disabled = true;
+        vaeBtn.style.display = "block";
     }
 });
 
-// Initialize default mode
-modeSelect.dispatchEvent(new Event('change'));
+modeSelect.dispatchEvent(new Event("change"));
 
-// Update PCA value label
+// PCA value label
 pcaSlider.oninput = () => {
     document.getElementById("pcaValue").textContent = pcaSlider.value;
 };
 
-// When user selects a new image
+// Image change
 selector.addEventListener("change", () => {
-    const imgPath = selector.value;
-    originalImg.src = imgPath;
+    originalImg.src = selector.value;
 });
 
-// PCA → backend endpoint
+// PCA
 async function runPCA(base64Img, components) {
     const response = await fetch("http://127.0.0.1:5000/pca", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ image: base64Img, components: components })
+        body: JSON.stringify({ image: base64Img, components })
     });
     return response.json();
 }
 
-// Read image as Base64
 function getBase64Image(url) {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
         const img = new Image();
         img.crossOrigin = "Anonymous";
-        img.onload = function () {
+        img.onload = () => {
             const canvas = document.createElement("canvas");
-            canvas.width = this.width;
-            canvas.height = this.height;
-            const ctx = canvas.getContext("2d");
-            ctx.drawImage(this, 0, 0);
+            canvas.width = img.width;
+            canvas.height = img.height;
+            canvas.getContext("2d").drawImage(img, 0, 0);
             resolve(canvas.toDataURL().split(",")[1]);
         };
         img.src = url;
     });
 }
 
-// Auto run PCA when slider moves
 pcaSlider.addEventListener("input", async () => {
-    const imgPath = selector.value;
-    const base64 = await getBase64Image(imgPath);
+    if (modeSelect.value !== "pca") return;
+    const base64 = await getBase64Image(selector.value);
     const result = await runPCA(base64, pcaSlider.value);
-
     reconImg.src = "data:image/png;base64," + result.reconstruction;
     reconErrorText.textContent = result.error.toFixed(3);
 });
 
+// AE
 aeSlider.addEventListener("input", async () => {
-    if (modeSelect.value !== "ae") return; // Only run if AE mode is active
-
-    const bottleneck = aeSlider.value;
-    const imgPath = selector.value;
-
-    // Convert selected image → base64
-    const base64 = "data:image/png;base64," + await getBase64Image(imgPath);
-
-
-    // Send to backend /ae
+    if (modeSelect.value !== "ae") return;
+    const base64 = "data:image/png;base64," + await getBase64Image(selector.value);
     const response = await fetch("http://127.0.0.1:5000/ae", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            image: base64,
-            bottleneck: bottleneck
-        })
+        body: JSON.stringify({ image: base64, bottleneck: aeSlider.value })
     });
-
     const result = await response.json();
-
-    // Update UI
     reconImg.src = result.image;
     reconErrorText.textContent = result.error.toFixed(6);
 });
 
-
+// VAE GENERATE
+vaeBtn.addEventListener("click", async () => {
+    const response = await fetch("http://127.0.0.1:5000/vae_generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ n: 64 })
+    });
+    const result = await response.json();
+    reconImg.src = "data:image/png;base64," + result.grid;
+    reconErrorText.textContent = "Generated";
+});
 </script>
 
 </body>
 </html>
-
 </body>
 </html>
