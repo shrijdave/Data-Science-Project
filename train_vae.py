@@ -8,11 +8,11 @@ from torchvision import transforms
 from torchvision.utils import save_image
 from tqdm import tqdm
 
-DATASET_ROOT = "Data-Science-Project-main/dataset"
+DATASET_ROOT = "dataset"
 SAVE_PATH = "vae_model.pth"
 
 NUM_IMAGES = 10000
-EPOCHS = 50
+EPOCHS = 15
 BATCH_SIZE = 32
 LATENT_DIM = 128
 
@@ -41,10 +41,11 @@ transform = transforms.Compose([
 # LOAD RANDOM IMAGES
 # -----------------------------
 def load_random_images():
-    imgs = [f for f in os.listdir(DATASET_ROOT) if f.lower().endswith((".jpg", ".jpeg", ".png", ".webp"))]
+    imgs = [f for f in os.listdir(DATASET_ROOT) if f.endswith(".jpg")]
     random.shuffle(imgs)
     imgs = imgs[:NUM_IMAGES]
     return [os.path.join(DATASET_ROOT, f) for f in imgs]
+
 
 print("Loading images...")
 paths = load_random_images()
