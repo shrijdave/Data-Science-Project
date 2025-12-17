@@ -13,7 +13,7 @@ DATASET_ROOT = "dataset"
 SAVE_PATH = "ae_model.pth"
 
 NUM_IMAGES = 10000        
-EPOCHS = 50
+EPOCHS = 15
 BATCH_SIZE = 32
 BOTTLENECK = 128         
 
